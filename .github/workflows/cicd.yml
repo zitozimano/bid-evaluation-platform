@@ -1,36 +1,32 @@
-  deploy-k8s:
-    needs: docker-build-and-push
+
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          version: v1.30.0
+          node-version: 20
+          cache: 'pnpm'
 
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" > $HOME/.kube/config
+      - name: Install PNPM
+        run: npm install -g pnpm
 
-      - name: Install Helm
-        uses: azure/setup-helm@v4
+      - name: Install dependencies
+        run: pnpm install
 
-      - name: Update image tags in Helm values
-        run: |
-          sed -i "s|backendImage:.*|backendImage: ghcr.io/${{ github.repository }}/eval-backend:${{ github.sha }}|" infra/helm/values.yaml
-          sed -i "s|frontendPublicImage:.*|frontendPublicImage: ghcr.io/${{ github.repository }}/eval-frontend-public:${{ github.sha }}|" infra/helm/values.yaml
+      - name: Build
+        run: pnpm build
 
-      - name: Helm upgrade
-        run: |
-          helm upgrade --install bid-eval infra/helm \
-            --namespace bid-eval --create-namespace
-
-      - name: Run Prisma migrate deploy
-        run: |
-          kubectl rollout status deployment/eval-backend -n bid-eval --timeout=120s
-          POD=$(kubectl get pods -n bid-eval -l app=eval-backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec -n bid-eval "$POD" -- npx prisma migrate deploy --schema=prisma/schema.prisma
+      - name: Run tests
+        run: pnpm test
