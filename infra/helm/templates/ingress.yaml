@@ -1,0 +1,28 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eval-ingress
+spec:
+  rules:
+    - host: {{ .Values.ingress.apiHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eval-backend
+                port:
+                  number: {{ .Values.backend.port }}
+    - host: {{ .Values.ingress.verifyHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eval-frontend-public
+                port:
+                  number: {{ .Values.frontendPublic.port }}
+{{- end }}

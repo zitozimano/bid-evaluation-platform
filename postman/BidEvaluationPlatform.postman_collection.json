@@ -1,0 +1,207 @@
+{
+  "info": {
+    "name": "Bid Evaluation Platform",
+    "_postman_id": "bepf-collection-id",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["me"]
+        }
+      }
+    },
+    {
+      "name": "Tenders - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tenders",
+          "host": ["{{baseUrl}}"],
+          "path": ["tenders"]
+        }
+      }
+    },
+    {
+      "name": "Tenders - Get",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tenders/{{tenderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tenders", "{{tenderId}}"]
+        }
+      }
+    },
+    {
+      "name": "Tenders - Status Change",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tenders/{{tenderId}}/status/{{newStatus}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tenders", "{{tenderId}}", "status", "{{newStatus}}"]
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Insights",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/tenders/{{tenderId}}/insights",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "tenders", "{{tenderId}}", "insights"]
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Heatmap",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/tenders/{{tenderId}}/heatmap",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "tenders", "{{tenderId}}", "heatmap"]
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Council Pack v2 JSON",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/tenders/{{tenderId}}/council-pack-v2",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "tenders", "{{tenderId}}", "council-pack-v2"]
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Council Pack v2 PDF",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/tenders/{{tenderId}}/council-pack-v2.pdf",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "tenders", "{{tenderId}}", "council-pack-v2.pdf"]
+        }
+      }
+    },
+    {
+      "name": "Admin - Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "users"]
+        }
+      }
+    },
+    {
+      "name": "Admin - Notification Rules",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/notification-rules",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "notification-rules"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "tenderId",
+      "value": ""
+    },
+    {
+      "key": "newStatus",
+      "value": "PUBLISHED"
+    }
+  ]
+}

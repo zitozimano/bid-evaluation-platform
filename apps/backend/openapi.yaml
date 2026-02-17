@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Bid Evaluation Platform API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /evaluation/{tenderId}/run:
+    post:
+      summary: Run evaluation for a tender
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Evaluation results with ranking
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvaluationResultWithRank"
+
+  /evaluation/{tenderId}/results:
+    get:
+      summary: Get evaluation results for a tender
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ranked results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvaluationResultWithRank"
+
+  /analytics/{tenderId}:
+    get:
+      summary: Get analytics for a tender
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderAnalytics"
+
+  /evidence/tender/{tenderId}:
+    get:
+      summary: Get evidence summary for a tender
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Evidence summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderEvidenceSummary"
+
+  /evidence/bidder/{bidderId}:
+    get:
+      summary: Get evidence summary for a bidder
+      parameters:
+        - in: path
+          name: bidderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bidder evidence summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidderEvidenceSummary"
+
+components:
+  schemas:
+    EvaluationResultWithRank:
+      type: object
+      properties:
+        bidder:
+          type: string
+        totalScore:
+          type: number
+        functionalityScore:
+          type: number
+        priceScore:
+          type: number
+        bbbeePoints:
+          type: number
+        qualifies:
+          type: boolean
+        rank:
+          type: integer
+
+    TenderAnalytics:
+      type: object
+      properties:
+        complianceRate:
+          type: number
+        riskScore:
+          type: number
+        exceptionStats:
+          type: object
+          properties:
+            total:
+              type: integer
+            approved:
+              type: integer
+            rejected:
+              type: integer
+            pending:
+              type: integer
+        slaStats:
+          type: object
+          properties:
+            breached:
+              type: integer
+            rate:
+              type: number
+        stageDistribution:
+          type: array
+          items:
+            type: object
+            properties:
+              stage:
+                type: string
+              count:
+                type: integer
+
+    TenderEvidenceSummary:
+      type: object
+      properties:
+        tenderId:
+          type: string
+        latestRun:
+          type: object
+          nullable: true
+        complianceRate:
+          type: number
+        ranking:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvaluationResultWithRank"
+        bidders:
+          type: array
+          items:
+            type: object
+            properties:
+              bidderId:
+                type: string
+              name:
+                type: string
+              evidenceCount:
+                type: integer
+              evaluation:
+                type: object
+                nullable: true
+
+    BidderEvidenceSummary:
+      type: object
+      properties:
+        bidderId:
+          type: string
+        name:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: object
+        evaluation:
+          type: object
+          nullable: true

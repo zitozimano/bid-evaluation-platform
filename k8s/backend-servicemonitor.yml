@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: bidplatform-backend
+  labels:
+    app: bidplatform-backend
+spec:
+  selector:
+    matchLabels:
+      app: bidplatform-backend
+  endpoints:
+    - port: http
+      path: /health/metrics
+      interval: 15s

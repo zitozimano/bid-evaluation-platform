@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bid-eval-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bid-eval-api
+  template:
+    metadata:
+      labels:
+        app: bid-eval-api
+    spec:
+      containers:
+        - name: api
+          image: your-registry/bid-evaluation-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bid-eval-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bid-eval-secrets
+                  key: JWT_SECRET
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30

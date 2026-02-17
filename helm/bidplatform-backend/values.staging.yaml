@@ -1,0 +1,26 @@
+replicaCount: 2
+
+ingress:
+  hosts:
+    - host: bidplatform-staging.your-domain
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+env:
+  DATABASE_URL: "postgres://postgres:postgres@postgres-staging:5432/bidplatform_staging"
+  REDIS_URL: "redis://redis-staging:6379"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70

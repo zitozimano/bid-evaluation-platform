@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bidplatform-backend.fullname" . }}
+  labels:
+    app: {{ include "bidplatform-backend.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "bidplatform-backend.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "bidplatform-backend.name" . }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 4000
+          env:
+            - name: PORT
+              value: {{ .Values.env.PORT | quote }}
+            - name: DATABASE_URL
+              value: {{ .Values.env.DATABASE_URL | quote }}
+            - name: REDIS_URL
+              value: {{ .Values.env.REDIS_URL | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: 4000
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: changelog
+              mountPath: /app/changelog.json
+              subPath: changelog.json
+      volumes:
+        - name: changelog
+          configMap:
+            name: {{ include "bidplatform-backend.fullname" . }}-changelog

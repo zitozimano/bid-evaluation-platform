@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@bidplatform/ui": ["shared/ui/src"]
+    }
+  }
+}

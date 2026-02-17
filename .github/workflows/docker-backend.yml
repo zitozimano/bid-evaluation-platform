@@ -1,0 +1,64 @@
+name: Build & Push Backend Image
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: your-org/bidplatform-backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          echo "GIT_COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+
+      - name: Ensure backend changelog exists
+        run: |
+          if [ -f changelog.json ]; then
+            cp changelog.json backend/changelog.json
+          else
+            echo '{"version":"unknown","changes":[]}' > backend/changelog.json
+          fi
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg BUILD_TIME=${BUILD_TIME} \
+            --build-arg GIT_COMMIT=${GIT_COMMIT} \
+            --build-arg GIT_BRANCH=${GIT_BRANCH} \
+            -t $REGISTRY/$IMAGE_NAME:${GIT_COMMIT} \
+            -t $REGISTRY/$IMAGE_NAME:latest \
+            backend
+
+      - name: Push image
+        run: |
+          docker push $REGISTRY/$IMAGE_NAME:${GIT_COMMIT}
+          docker push $REGISTRY/$IMAGE_NAME:latest

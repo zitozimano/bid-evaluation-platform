@@ -1,0 +1,60 @@
+openapi: 3.0.3
+info:
+  title: Bid Evaluation Platform – Public Verification API
+  version: 1.0.0
+paths:
+  /public/verification:
+    get:
+      summary: Verify tender outcome by tender number and hash
+      parameters:
+        - in: query
+          name: tenderNo
+          required: true
+          schema:
+            type: string
+          description: Tender number (e.g. SCM/2025/001)
+        - in: query
+          name: hash
+          required: true
+          schema:
+            type: string
+          description: Verification hash from EvaluationDocument
+      responses:
+        "200":
+          description: Verification successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenderNumber:
+                    type: string
+                  hash:
+                    type: string
+                  verified:
+                    type: boolean
+                  winner:
+                    type: object
+                    properties:
+                      bidderId:
+                        type: string
+                      name:
+                        type: string
+                      totalScore:
+                        type: number
+                  workflowStages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        stage:
+                          type: string
+                        label:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        "400":
+          description: Missing parameters
+        "404":
+          description: Tender or hash not found

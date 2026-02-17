@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "SCM Tender Evaluation API",
+    "_postman_id": "scm-tender-eval-collection",
+    "description": "Core backend endpoints for SCM Tender Evaluation Engine",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"name\": \"Admin\",\n  \"password\": \"Password123!\",\n  \"role\": \"Admin\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Tenders - List",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/tenders", "host": ["{{baseUrl}}"], "path": ["tenders"] }
+      }
+    },
+    {
+      "name": "Tenders - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/tenders", "host": ["{{baseUrl}}"], "path": ["tenders"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Roads Maintenance 2025\",\n  \"description\": \"Routine roads maintenance\",\n  \"status\": \"Open\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Bidders - For Tender",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/bidders/tender/{{tenderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["bidders", "tender", "{{tenderId}}"]
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Create Criteria",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/{{tenderId}}/criteria",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "{{tenderId}}", "criteria"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Functionality\",\n  \"weight\": 70,\n  \"minimumScore\": 60,\n  \"type\": \"FUNCTIONALITY\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Assign Evaluators",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/{{tenderId}}/assign",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "{{tenderId}}", "assign"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"evaluatorIds\": [\"{{evaluatorId}}\"]\n}"
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Submit Score",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/{{tenderId}}/score",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "{{tenderId}}", "score"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"evaluatorId\": \"{{evaluatorId}}\",\n  \"bidderId\": \"{{bidderId}}\",\n  \"criteriaId\": \"{{criteriaId}}\",\n  \"score\": 85,\n  \"comment\": \"Meets requirements\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Evaluation - Consolidate",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/evaluation/{{tenderId}}/consolidate",
+          "host": ["{{baseUrl}}"],
+          "path": ["evaluation", "{{tenderId}}", "consolidate"]
+        }
+      }
+    },
+    {
+      "name": "Exports - PDF",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/exports/{{tenderId}}/pdf",
+          "host": ["{{baseUrl}}"],
+          "path": ["exports", "{{tenderId}}", "pdf"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "tenderId", "value": "" },
+    { "key": "evaluatorId", "value": "" },
+    { "key": "bidderId", "value": "" },
+    { "key": "criteriaId", "value": "" }
+  ]
+}

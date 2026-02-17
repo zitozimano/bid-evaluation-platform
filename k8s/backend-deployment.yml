@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bidplatform-backend
+  labels:
+    app: bidplatform-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bidplatform-backend
+  template:
+    metadata:
+      labels:
+        app: bidplatform-backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/your-org/bidplatform-backend:latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: PORT
+              value: "4000"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bidplatform-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bidplatform-secrets
+                  key: REDIS_URL
+            - name: BUILD_TIME
+              value: "unknown"
+            - name: GIT_COMMIT
+              value: "unknown"
+            - name: GIT_BRANCH
+              value: "unknown"
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

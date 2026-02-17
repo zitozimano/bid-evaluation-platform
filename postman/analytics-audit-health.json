@@ -1,0 +1,23 @@
+{
+  "info": {
+    "name": "BidPlatform Analytics + Audit + Health",
+    "_postman_id": "00000000-0000-0000-0000-000000000002",
+    "description": "Governance-grade analytics & audit endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    { "name": "Health", "request": { "method": "GET", "url": "{{BACKEND_URL}}/health" } },
+    { "name": "Analytics Overview", "request": { "method": "GET", "url": "{{BACKEND_URL}}/analytics/overview" } },
+    { "name": "Analytics Bidders", "request": { "method": "GET", "url": "{{BACKEND_URL}}/analytics/bidders" } },
+    { "name": "Analytics Process", "request": { "method": "GET", "url": "{{BACKEND_URL}}/analytics/process" } },
+    { "name": "Analytics Compliance", "request": { "method": "GET", "url": "{{BACKEND_URL}}/analytics/compliance" } },
+    { "name": "Analytics Risk", "request": { "method": "GET", "url": "{{BACKEND_URL}}/analytics/risk" } },
+    { "name": "Audit Logs", "request": { "method": "GET", "url": "{{BACKEND_URL}}/audit/analytics-access" } },
+    { "name": "Audit Users", "request": { "method": "GET", "url": "{{BACKEND_URL}}/audit/analytics-access/users" } },
+    { "name": "Audit Tenders", "request": { "method": "GET", "url": "{{BACKEND_URL}}/audit/analytics-access/tenders" } },
+    { "name": "Audit Export CSV", "request": { "method": "GET", "url": "{{BACKEND_URL}}/audit/analytics-access/export" } }
+  ],
+  "variable": [
+    { "key": "BACKEND_URL", "value": "http://localhost:4000" }
+  ]
+}

@@ -1,0 +1,26 @@
+replicaCount: 3
+
+ingress:
+  hosts:
+    - host: bidplatform.your-domain
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+env:
+  DATABASE_URL: "postgres://postgres:postgres@postgres-prod:5432/bidplatform_prod"
+  REDIS_URL: "redis://redis-prod:6379"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60

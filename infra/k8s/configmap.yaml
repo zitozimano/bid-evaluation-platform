@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eval-config
+data:
+  DATABASE_URL: "postgresql://eval_prod:REPLACE_DB_PASSWORD@postgres:5432/evaldb?schema=public"
+  PUBLIC_VERIFY_BASE_URL: "https://verify.zuzakami.co.za/public/verify"
+  PUBLIC_VERIFY_TOKEN_URL: "https://verify.zuzakami.co.za/public/verify-token"

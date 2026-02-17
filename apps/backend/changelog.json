@@ -1,0 +1,43 @@
+{
+  "version": "1.4.0",
+  "releasedAt": "2026-02-10T12:00:00Z",
+  "gitCommit": "abc1234",
+  "gitBranch": "main",
+  "changes": [
+    {
+      "type": "feature",
+      "title": "Added Prometheus /metrics endpoint",
+      "modules": ["health", "monitoring"],
+      "description": "Exposes uptime, cache hits, cache misses for Prometheus scraping."
+    },
+    {
+      "type": "feature",
+      "title": "Added /health/changelog endpoint",
+      "modules": ["health"],
+      "description": "Allows Internal Audit and IT to view release notes directly from the API."
+    },
+    {
+      "type": "improvement",
+      "title": "Improved Redis cache tracking",
+      "modules": ["analytics"],
+      "description": "Cache hits and misses now tracked for analytics performance dashboards."
+    },
+    {
+      "type": "fix",
+      "title": "Resolved unterminated SQL template literal",
+      "modules": ["analytics"],
+      "description": "Fixed analytics.service.ts SQL block causing TS1160 errors."
+    }
+  ],
+  "approvals": [
+    {
+      "approvedBy": "CFO",
+      "approvedAt": "2026-02-09T15:30:00Z",
+      "reference": "CR-2026-021"
+    }
+  ],
+  "riskNotes": [
+    "Ensure Redis is reachable before enabling metrics.",
+    "Analytics queries now rely on raw SQL; ensure DB migrations are applied."
+  ]
+}

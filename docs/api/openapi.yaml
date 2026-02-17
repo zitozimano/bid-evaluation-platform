@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: Bid Evaluation Platform API
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local
+
+paths:
+  /tenders:
+    post:
+      summary: Create tender
+      tags: [Tender]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                number:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+              required: [number, description]
+      responses:
+        '201':
+          description: Tender created
+
+  /tenders/{tenderId}:
+    get:
+      summary: Get tender
+      tags: [Tender]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tender details
+
+  /tenders/{tenderId}/assign-scm:
+    post:
+      summary: Assign SCM to tender
+      tags: [Tender]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+              required: [userId]
+      responses:
+        '200':
+          description: SCM assigned
+
+  /tenders/{tenderId}/bidders:
+    post:
+      summary: Register bidder
+      tags: [Bidder]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+              required: [name]
+      responses:
+        '201':
+          description: Bidder created
+    get:
+      summary: List bidders
+      tags: [Bidder]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of bidders
+
+  /bidders/{bidderId}/criterion-scores:
+    post:
+      summary: Add technical scores
+      tags: [Evaluation]
+      parameters:
+        - in: path
+          name: bidderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                criterionCode:
+                  type: string
+                rawScore:
+                  type: number
+                scaleMax:
+                  type: number
+                weight:
+                  type: number
+              required: [criterionCode, rawScore, scaleMax, weight]
+      responses:
+        '201':
+          description: Score created
+
+  /tenders/{tenderId}/evaluation-config:
+    post:
+      summary: Set evaluation config
+      tags: [Evaluation]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                priceWeight:
+                  type: integer
+                bbbeeWeight:
+                  type: integer
+                functionalityPass:
+                  type: integer
+                functionalityMax:
+                  type: integer
+                criteria:
+                  type: object
+              required: [priceWeight, bbbeeWeight, functionalityPass, functionalityMax]
+      responses:
+        '201':
+          description: Config saved
+    get:
+      summary: Get evaluation config
+      tags: [Evaluation]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Config details
+
+  /evaluation/{tenderId}/run:
+    post:
+      summary: Run evaluation engine
+      tags: [Evaluation]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Evaluation run completed
+
+  /evaluation/{tenderId}/results:
+    get:
+      summary: Get evaluation results
+      tags: [Evaluation]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of EvaluationResult
+
+  /evaluation-results/{resultId}/workflow-log:
+    post:
+      summary: Add workflow log entry
+      tags: [Workflow]
+      parameters:
+        - in: path
+          name: resultId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stage:
+                  type: string
+                daysSpent:
+                  type: number
+              required: [stage]
+      responses:
+        '201':
+          description: Workflow log created
+
+  /tenders/{tenderId}/signatures:
+    post:
+      summary: Add signature
+      tags: [Signatures]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                name:
+                  type: string
+                signature:
+                  type: string
+                comment:
+                  type: string
+      responses:
+        '201':
+          description: Signature captured
+    get:
+      summary: Get signatures
+      tags: [Signatures]
+      parameters:
+        - in: path
+          name: tenderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of signatures
+
+  /public/verification:
+    get:
+      summary: Public verification by tender number and hash
+      tags: [Public]
+      parameters:
+        - in: query
+          name: tenderNo
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: hash
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verified evaluation summary

@@ -1,0 +1,22 @@
+backendImage: ghcr.io/your-org/eval-backend:latest
+frontendPublicImage: ghcr.io/your-org/eval-frontend-public:latest
+
+backend:
+  replicas: 2
+  port: 3000
+
+frontendPublic:
+  replicas: 2
+  port: 3000
+
+ingress:
+  enabled: true
+  apiHost: api.zuzakami.co.za
+  verifyHost: verify.zuzakami.co.za
+
+tenantDefaults:
+  code: default
+  name: "Default Municipality"
+  primaryColor: "#0055ff"
+  secondaryColor: "#00cc88"
+  publicName: "Bid Evaluation Platform"

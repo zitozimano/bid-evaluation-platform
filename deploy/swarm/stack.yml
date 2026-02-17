@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eval
+      POSTGRES_PASSWORD: evalpass
+      POSTGRES_DB: evaldb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  api:
+    image: your-registry/bid-evaluation-api:latest
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://eval:evalpass@db:5432/evaldb
+      JWT_SECRET: super-secret
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  nginx:
+    image: your-registry/bid-evaluation-nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+    networks:
+      - backend
+      - frontend
+
+volumes:
+  db_data:
+
+networks:
+  backend:
+  frontend:

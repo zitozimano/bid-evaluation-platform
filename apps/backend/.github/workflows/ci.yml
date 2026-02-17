@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: eval
+          POSTGRES_PASSWORD: evalpass
+          POSTGRES_DB: evaldb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U eval -d evaldb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgres://eval:evalpass@localhost:5432/evaldb
+      NODE_ENV: test
+      JWT_SECRET: test-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Migrate
+        run: npx prisma migrate deploy
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_API_URL: https://api.bidevaluation.gov.za
+          VITE_WS_URL: wss://api.bidevaluation.gov.za
+          VITE_APP_NAME: "Bid Evaluation Platform"
+          VITE_ENABLE_DEBUG: "false"
+          VITE_APP_VERSION: "1.0.0"
+        run: npm run build

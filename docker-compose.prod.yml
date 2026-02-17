@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: bepf_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bepf
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: bepf_backend
+    restart: always
+    env_file:
+      - ./apps/backend/.env.prod
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/bepf
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  frontend-internal:
+    build:
+      context: ./apps/frontend-internal
+      dockerfile: Dockerfile
+    container_name: bepf_frontend_internal
+    restart: always
+    env_file:
+      - ./apps/frontend-internal/.env.prod
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:3000
+    depends_on:
+      - backend
+    ports:
+      - "3001:3000"
+
+volumes:
+  db_data:

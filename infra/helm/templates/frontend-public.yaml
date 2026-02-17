@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eval-frontend-public
+spec:
+  replicas: {{ .Values.frontendPublic.replicas }}
+  selector:
+    matchLabels:
+      app: eval-frontend-public
+  template:
+    metadata:
+      labels:
+        app: eval-frontend-public
+    spec:
+      containers:
+        - name: frontend-public
+          image: {{ .Values.frontendPublicImage }}
+          ports:
+            - containerPort: {{ .Values.frontendPublic.port }}
+          envFrom:
+            - configMapRef:
+                name: eval-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eval-frontend-public
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.frontendPublic.port }}
+  selector:
+    app: eval-frontend-public

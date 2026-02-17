@@ -1,0 +1,11 @@
+tunnel: bepf-tunnel
+credentials-file: /home/zimano/.cloudflared/<tunnel-id>.json
+
+ingress:
+  - hostname: bepf.zuzakami.co.za
+    service: https://localhost:443
+  - hostname: internal.bepf.zuzakami.co.za
+    service: https://localhost:443
+  - hostname: api.bepf.zuzakami.co.za
+    service: https://localhost:443
+  - service: http_status:404

@@ -1,0 +1,28 @@
+/* src/components/EvaluationPackViewer/styles.css */
+.pack-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #fff;
+}
+
+.section {
+  margin-top: 32px;
+}
+
+.section h2 {
+  margin-bottom: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-size: 13px;
+}

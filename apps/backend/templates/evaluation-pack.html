@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Bid Evaluation Pack</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #222;
+      margin: 25px;
+      line-height: 1.4;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin-top: 25px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin-top: 15px;
+    }
+
+    .section {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 11px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .hash-box {
+      border: 1px dashed #999;
+      padding: 10px;
+      margin-top: 10px;
+      word-break: break-all;
+      background: #fafafa;
+    }
+
+    .small {
+      font-size: 10px;
+      color: #666;
+    }
+
+    .signature-block {
+      margin-top: 10px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      background: #fdfdfd;
+    }
+
+    .annexure-block {
+      margin-top: 15px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      background: #fcfcfc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <h1>Bid Evaluation Pack</h1>
+  <div class="small">Generated automatically by the Bid Evaluation Platform</div>
+
+  <!-- TENDER INFO -->
+  <div class="section">
+    <h2>Tender Information</h2>
+    <p><strong>Tender ID:</strong> {{tenderId}}</p>
+    <p><strong>Run Number:</strong> {{audit.runNumber}}</p>
+    <p><strong>Timestamp:</strong> {{audit.timestamp}}</p>
+  </div>
+
+  <!-- VERIFICATION -->
+  <div class="section">
+    <h2>Verification Seal</h2>
+    <p class="small">
+      This evaluation pack is sealed with a cryptographic verification hash.
+      Any modification to this document or its underlying data will invalidate the hash.
+    </p>
+
+    <div class="hash-box">
+      <strong>Verification Hash:</strong><br />
+      {{verificationHash}}
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="section">
+    <h2>Final Ranking</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Bidder ID</th>
+          <th>Total Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each ranking}}
+        <tr>
+          <td>{{position}}</td>
+          <td>{{bidderId}}</td>
+          <td>{{totalScore}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SIGNATURES -->
+  <div class="section">
+    <h2>Evaluation Signatures</h2>
+
+    {{#if signatures.length}}
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Name</th>
+            <th>Signed At</th>
+            <th>Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each signatures}}
+          <tr>
+            <td>{{role}}</td>
+            <td>{{name}}</td>
+            <td>{{signedAt}}</td>
+            <td>{{comment}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <p class="small">No signatures recorded yet.</p>
+    {{/if}}
+  </div>
+
+  <!-- ANNEXURES -->
+  <div class="section">
+    <h2>Annexures (Evidence)</h2>
+
+    {{#if annexures.length}}
+      {{#each annexures}}
+        <div class="annexure-block">
+          <h3>Bidder: {{bidderName}} ({{bidderId}})</h3>
+
+          {{#if evidence.length}}
+            <table>
+              <thead>
+                <tr>
+                  <th>Label</th>
+                  <th>Type</th>
+                  <th>URL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each evidence}}
+                <tr>
+                  <td>{{label}}</td>
+                  <td>{{type}}</td>
+                  <td>{{url}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <p class="small">No evidence uploaded for this bidder.</p>
+          {{/if}}
+        </div>
+      {{/each}}
+    {{else}}
+      <p class="small">No annexures available.</p>
+    {{/if}}
+  </div>
+
+</body>
+</html>

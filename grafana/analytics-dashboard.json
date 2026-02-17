@@ -1,0 +1,53 @@
+{
+  "id": null,
+  "title": "BidPlatform Analytics Performance",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Uptime (hours)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "bidplatform_uptime_seconds / 3600",
+          "legendFormat": "uptime",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Cache Hits vs Misses",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(bidplatform_cache_hits[5m])",
+          "legendFormat": "hits",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(bidplatform_cache_misses[5m])",
+          "legendFormat": "misses",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cache Hit Ratio (last 5m)",
+      "gridPos": { "x": 0, "y": 4, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "rate(bidplatform_cache_hits[5m]) / (rate(bidplatform_cache_hits[5m]) + rate(bidplatform_cache_misses[5m]))",
+          "legendFormat": "hit_ratio",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}

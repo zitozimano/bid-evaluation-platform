@@ -1,0 +1,10 @@
+ingress:
+  apiHost: api.fs-bids.gov.za
+  verifyHost: verify.fs-bids.gov.za
+
+tenantDefaults:
+  code: fs
+  name: "Free State Provincial Treasury"
+  primaryColor: "#004b8d"
+  secondaryColor: "#f9a825"
+  publicName: "Free State Bid Evaluation Portal"

@@ -1,0 +1,9 @@
+import React from "react";
+
+export function Table({ children }: { children: React.ReactNode }) {
+  return (
+    <table className="w-full border-collapse text-text-muted">
+      {children}
+    </table>
+  );
+}

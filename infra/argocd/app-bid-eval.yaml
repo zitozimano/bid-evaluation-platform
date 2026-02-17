@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bid-eval
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/bid-evaluation-platform.git
+    targetRevision: main
+    path: infra/helm
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bid-eval
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
