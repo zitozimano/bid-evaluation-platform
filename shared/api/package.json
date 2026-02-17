@@ -9,6 +9,6 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --clean"
   },
   "dependencies": {
-    "@bidplatform/domain": "*"
+   "@bidplatform/domain": "workspace:*"
   }
 }
