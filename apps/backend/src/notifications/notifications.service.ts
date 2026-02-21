@@ -1,31 +1,22 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-
-export type NotificationTrigger =
-  | "TENDER_STATUS_CHANGED"
-  | "TENDER_PUBLISHED"
-  | "TENDER_AWARDED";
+import { CreateNotificationDto } from "./dto/create-notification.dto";
 
 @Injectable()
 export class NotificationsService {
-  private readonly logger = new Logger(NotificationsService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
-  async sendTenderEmail(to: string, subject: string, body: string) {
-    this.logger.log(`Email → ${to}: ${subject}`);
-    // wire to real provider in infra
-  }
-
-  async createInAppNotification(userId: string, message: string) {
-    await this.prisma.notification.create({
+  // ⭐ Create a single notification
+  async create(dto: CreateNotificationDto) {
+    return this.prisma.notification.create({
       data: {
-        userId,
-        message,
+        userId: dto.userId,
+        message: dto.message,
       },
     });
   }
 
+  // ⭐ List notifications for a user
   async listForUser(userId: string) {
     return this.prisma.notification.findMany({
       where: { userId },
@@ -33,46 +24,25 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Notification rules engine
-   * Rules stored in DB: notificationRule { id, trigger, role, enabled }
-   */
-  async handleTrigger(trigger: NotificationTrigger, payload: { tenderId: string; tenderNumber: string; newStatus?: string }) {
+  // ⭐ Trigger notifications for all users with a given role
+  async triggerForRole(trigger: string, role: string, message: string) {
     const rules = await this.prisma.notificationRule.findMany({
-      where: { trigger, enabled: true },
+      where: { trigger, role, enabled: true },
     });
 
-    for (const rule of rules) {
-      // resolve recipients by role
-      const users = await this.prisma.user.findMany({
-        where: { roles: { has: rule.role } },
-      });
+    if (rules.length === 0) return;
 
-      for (const user of users) {
-        const message = this.buildMessage(trigger, payload);
-        await this.createInAppNotification(user.id, message);
-        await this.sendTenderEmail(
-          user.email,
-          `Tender ${payload.tenderNumber} – ${trigger}`,
-          message,
-        );
-      }
-    }
-  }
+    const users = await this.prisma.user.findMany({
+      where: { role },
+    });
 
-  private buildMessage(
-    trigger: NotificationTrigger,
-    payload: { tenderId: string; tenderNumber: string; newStatus?: string },
-  ) {
-    switch (trigger) {
-      case "TENDER_STATUS_CHANGED":
-        return `Tender ${payload.tenderNumber} status changed to ${payload.newStatus}`;
-      case "TENDER_PUBLISHED":
-        return `Tender ${payload.tenderNumber} has been published`;
-      case "TENDER_AWARDED":
-        return `Tender ${payload.tenderNumber} has been awarded`;
-      default:
-        return `Tender ${payload.tenderNumber} event: ${trigger}`;
-    }
+    if (users.length === 0) return;
+
+    await this.prisma.notification.createMany({
+      data: users.map((u) => ({
+        userId: u.id,
+        message,
+      })),
+    });
   }
 }

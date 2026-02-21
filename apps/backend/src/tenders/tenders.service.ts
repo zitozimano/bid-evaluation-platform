@@ -1,103 +1,84 @@
-// imports unchanged, plus:
-import { NotificationsService, NotificationTrigger } from "../notifications/notifications.service";
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { CreateTenderDto } from "./dto/create-tender.dto";
+import { UpdateTenderDto } from "./dto/update-tender.dto";
+import { WorkflowService } from "../workflow/workflow.service";
+import { AuditService } from "../audit/audit.service";
 
 @Injectable()
 export class TendersService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly notifications: NotificationsService,
+    private readonly workflow: WorkflowService,
+    private readonly audit: AuditService
   ) {}
 
-  // ... list/get/create/update as before ...
+  private tenders = [
+    {
+      id: "BID-001",
+      description: "Road Rehabilitation Phase 1",
+      department: "Infrastructure",
+      closingDate: "2025-03-15",
+      status: "advertised",
+      documents: [],
+      bidders: []
+    }
+  ];
 
-  async updateTenderStatus(tenderId: string, newStatus: string) {
-    const tender = await this.prisma.tender.findUnique({
-      where: { id: tenderId },
+  findAll() {
+    return this.tenders;
+  }
+
+  findOne(id: string) {
+    return this.tenders.find((t) => t.id === id);
+  }
+
+  create(dto: CreateTenderDto) {
+    this.tenders.push(dto as any);
+
+    this.audit.log({
+      user: "system",
+      entity: "tender",
+      entityId: dto.id,
+      action: "create",
+      payload: dto
     });
-    if (!tender) return null;
 
-    const allowed = {
-      DRAFT: ["PUBLISHED"],
-      PUBLISHED: ["AWARDED", "ARCHIVED"],
-      AWARDED: ["ARCHIVED"],
-      ARCHIVED: [],
-    };
+    return dto;
+  }
 
-    const current = tender.status ?? "DRAFT";
-    if (!allowed[current].includes(newStatus)) {
-      throw new Error(`Invalid transition: ${current} → ${newStatus}`);
+  update(id: string, dto: UpdateTenderDto) {
+    const tender = this.findOne(id);
+    Object.assign(tender, dto);
+
+    this.audit.log({
+      user: "system",
+      entity: "tender",
+      entityId: id,
+      action: "update",
+      payload: dto
+    });
+
+    return tender;
+  }
+
+  transition(id: string, to: string) {
+    const tender = this.findOne(id);
+    const from = tender.status;
+
+    if (!this.workflow.canTransitionTender(from as any, to as any)) {
+      throw new BadRequestException(`Invalid transition: ${from} → ${to}`);
     }
 
-    const updated = await this.prisma.tender.update({
-      where: { id: tenderId },
-      data: { status: newStatus },
+    tender.status = to;
+
+    this.audit.log({
+      user: "system",
+      entity: "tender",
+      entityId: id,
+      action: "transition",
+      oldState: from,
+      newState: to
     });
 
-    await this.logActivity(
-      tenderId,
-      "STATUS",
-      `Status changed: ${current} → ${newStatus}`,
-    );
-
-    // timeline event
-    await this.prisma.tenderTimelineEvent.create({
-      data: {
-        tenderId,
-        type: "STATUS_CHANGE",
-        label: `Status: ${current} → ${newStatus}`,
-      },
-    });
-
-    // notification rules
-    const trigger: NotificationTrigger =
-      newStatus === "PUBLISHED"
-        ? "TENDER_PUBLISHED"
-        : newStatus === "AWARDED"
-        ? "TENDER_AWARDED"
-        : "TENDER_STATUS_CHANGED";
-
-    await this.notifications.handleTrigger(trigger, {
-      tenderId,
-      tenderNumber: updated.number,
-      newStatus,
-    });
-
-    return {
-      id: updated.id,
-      number: updated.number,
-      description: updated.description,
-      status: updated.status ?? "DRAFT",
-      createdAt: updated.createdAt,
-    };
-  }
-
-  async getTimeline(tenderId: string) {
-    const events = await this.prisma.tenderTimelineEvent.findMany({
-      where: { tenderId },
-      orderBy: { createdAt: "asc" },
-    });
-
-    return events.map((e) => ({
-      id: e.id,
-      type: e.type,
-      label: e.label,
-      createdAt: e.createdAt,
-    }));
-  }
-
-  async getTenderDetails(tenderId: string) {
-    const tender = await this.getTender(tenderId);
-    if (!tender) return null;
-
-    const [activity, timeline] = await Promise.all([
-      this.listActivity(tenderId),
-      this.getTimeline(tenderId),
-    ]);
-
-    return {
-      tender,
-      activity,
-      timeline,
-    };
+    return tender;
   }
 }

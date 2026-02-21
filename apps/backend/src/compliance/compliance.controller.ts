@@ -1,39 +1,57 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ComplianceService } from './compliance.service';
-import { Roles } from '../auth/roles.decorator';
-import { Role } from '../auth/roles.enum';
+import { Body, Controller, Get, Param, Post, Req } from "@nestjs/common";
+import { Roles } from "../auth/roles.decorator";
+import { Role } from "../auth/roles.enum";
+import { ComplianceService } from "./compliance.service";
+import { CreateCircularDto } from "./dto/create-circular.dto";
+import { CreateRuleDto } from "./dto/create-rule.dto";
+import { RecordComplianceDto } from "./dto/record-compliance.dto";
 
-@Controller('compliance')
+@Controller("compliance")
 export class ComplianceController {
-  constructor(private complianceService: ComplianceService) {}
+  constructor(private readonly service: ComplianceService) {}
 
-  @Get('departments/risk-heatmap')
-  @Roles(Role.SCM, Role.CFO, Role.AUDIT, Role.AGSA)
-  getRiskHeatmap() {
-    return this.complianceService.getRiskHeatmap();
+  // ───────────────────────────────────────────────
+  // CREATE CIRCULAR
+  // ───────────────────────────────────────────────
+  @Roles(Role.ADMIN, Role.SCM)
+  @Post("circulars")
+  createCircular(@Body() dto: CreateCircularDto, @Req() req: any) {
+    return this.service.createCircular(dto, req.user.tenantId);
   }
 
-  @Get('departments/:department/trend')
-  @Roles(Role.SCM, Role.CFO, Role.AUDIT, Role.AGSA)
-  getDeptTrend(@Param('department') department: string) {
-    return this.complianceService.getDepartmentTrend(department);
+  // ───────────────────────────────────────────────
+  // CREATE RULE
+  // ───────────────────────────────────────────────
+  @Roles(Role.ADMIN, Role.SCM)
+  @Post("rules")
+  createRule(@Body() dto: CreateRuleDto, @Req() req: any) {
+    return this.service.createRule(dto, req.user.tenantId);
   }
 
-  @Get('departments/:department/narrative')
-  @Roles(Role.SCM, Role.CFO, Role.AUDIT, Role.AGSA)
-  getDeptNarrative(@Param('department') department: string) {
-    return this.complianceService.getDepartmentNarrative(department);
+  // ───────────────────────────────────────────────
+  // RECORD COMPLIANCE ITEM
+  // ───────────────────────────────────────────────
+  @Roles(Role.ADMIN, Role.SCM, Role.EVALUATOR)
+  @Post("record")
+  recordCompliance(@Body() dto: RecordComplianceDto, @Req() req: any) {
+    return this.service.recordCompliance(dto, req.user.tenantId);
   }
 
-  @Get('departments/:department/forecast')
-  @Roles(Role.SCM, Role.CFO, Role.AUDIT, Role.AGSA)
-  getDeptForecast(@Param('department') department: string) {
-    return this.complianceService.getDepartmentForecast(department);
+  // ───────────────────────────────────────────────
+  // GENERATE DASHBOARD
+  // ───────────────────────────────────────────────
+  @Roles(Role.ADMIN, Role.SCM, Role.CFO, Role.AUDIT)
+  @Post("dashboard/:tenderId")
+  generateDashboard(@Param("tenderId") tenderId: string, @Req() req: any) {
+    return this.service.generateDashboard(tenderId, req.user.tenantId);
   }
 
-  @Get('departments/:department/kpis')
-  @Roles(Role.SCM, Role.CFO, Role.AUDIT, Role.AGSA)
-  getDeptKpis(@Param('department') department: string) {
-    return this.complianceService.getDepartmentKpis(department);
+  // ───────────────────────────────────────────────
+  // GET DASHBOARD
+  // ───────────────────────────────────────────────
+  @Roles(Role.ADMIN, Role.SCM, Role.CFO, Role.AUDIT)
+  @Get("dashboard/:tenderId")
+  getDashboard(@Param("tenderId") tenderId: string, @Req() req: any) {
+    return this.service.getDashboard(tenderId, req.user.tenantId);
   }
 }

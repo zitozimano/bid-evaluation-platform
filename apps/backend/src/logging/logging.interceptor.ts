@@ -5,32 +5,22 @@ import {
   NestInterceptor,
 } from "@nestjs/common";
 import { Observable, tap } from "rxjs";
-import { AppLogger } from "./logger.service";
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  constructor(private logger: AppLogger) {}
-
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest();
-    const { method, url } = req;
-    const user = req.user;
-    const start = Date.now();
+    const { method, url, user } = req;
+    const started = Date.now();
 
     return next.handle().pipe(
       tap(() => {
-        const ms = Date.now() - start;
-        this.logger.log(
-          {
-            method,
-            url,
-            userId: user?.id ?? null,
-            role: user?.role ?? null,
-            durationMs: ms,
-          },
-          "HTTP"
+        const duration = Date.now() - started;
+        // Replace with your logger service if desired
+        console.log(
+          `[${method}] ${url} (${user?.userId ?? "anonymous"}) - ${duration}ms`,
         );
-      })
+      }),
     );
   }
 }

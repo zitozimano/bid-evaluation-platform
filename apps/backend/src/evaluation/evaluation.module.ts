@@ -1,12 +1,23 @@
 import { Module } from "@nestjs/common";
-import { EvaluationService } from "./evaluation.service";
-import { EvaluationController } from "./evaluation.controller";
 import { PrismaModule } from "../prisma/prisma.module";
+import { EvaluationService } from "./evaluation.service";
+import { WorkflowLogService } from "./workflow/workflow-log.service";
+import { ScoringModule } from "./scoring/scoring.module";
+import { EvaluationQueryService } from "./evaluation-query.service";
 
 @Module({
-  imports: [PrismaModule],
-  providers: [EvaluationService],
-  controllers: [EvaluationController],
-  exports: [EvaluationService],
+  imports: [
+    PrismaModule,
+    ScoringModule,
+  ],
+  providers: [
+    EvaluationService,
+    WorkflowLogService,
+    EvaluationQueryService,
+  ],
+  exports: [
+    EvaluationService,
+    EvaluationQueryService,
+  ],
 })
 export class EvaluationModule {}

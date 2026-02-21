@@ -1,0 +1,8 @@
+import QRCode from "qrcode";
+
+export async function generateQrDataUrl(text: string): Promise<string> {
+  return QRCode.toDataURL(text, {
+    margin: 1,
+    scale: 4
+  });
+}

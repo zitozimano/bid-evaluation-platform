@@ -1,0 +1,31 @@
+Copyright (c) 2024–2026 
+Zuzakami (Pty) Ltd  
+All rights reserved.
+
+This software and all associated documentation, source code, object code, 
+designs, workflows, data models, schemas, specifications, reports, 
+algorithms, and derivative works (collectively, the “Software”) are the 
+confidential and proprietary property of Zuzakami (Pty) Ltd.
+
+No part of the Software may be copied, reproduced, modified, merged, 
+published, distributed, sublicensed, sold, assigned, leased, loaned, 
+reverse‑engineered, decompiled, disassembled, or otherwise exploited in 
+any form, in whole or in part, without the prior written consent of 
+Zuzakami (Pty) Ltd.
+
+Unauthorized access, use, disclosure, or distribution of the Software, 
+including any attempt to circumvent technical, operational, or security 
+controls, is strictly prohibited and may result in civil and criminal 
+penalties to the fullest extent permitted by applicable law.
+
+The Software is provided “AS IS”, without warranty of any kind, express 
+or implied, including but not limited to warranties of merchantability, 
+fitness for a particular purpose, non‑infringement, accuracy, or 
+uninterrupted operation. In no event shall Zuzakami (Pty) Ltd, its 
+directors, shareholders, employees, or agents be liable for any claim, 
+damages, losses, or other liability, whether in contract, delict, or 
+otherwise, arising from or related to the Software or its use.
+
+Use of the Software is restricted to authorized institutions, entities, 
+and personnel operating under a valid written agreement with 
+Zuzakami (Pty) Ltd. All rights not expressly granted are reserved.

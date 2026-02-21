@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards } from "@nestjs/common";
 import { AnalyticsService } from "./analytics.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
-import { Tenant } from "../tenant/tenant.decorator";
+import { Tenant } from "../tenants/tenant.decorator";
 
 @Controller("analytics")
 @UseGuards(JwtAuthGuard)

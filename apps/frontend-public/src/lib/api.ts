@@ -1,24 +1,26 @@
-export interface VerificationResult {
-  valid: boolean;
-  hash: string;
-  tenderId?: string;
-  runNumber?: number;
-  timestamp?: string;
-  [key: string]: unknown;
-}
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
-export async function verifyHash(hash: string): Promise<VerificationResult> {
-  const res = await fetch(`/evaluation/verify/${encodeURIComponent(hash)}`, {
+/**
+ * Generic GET wrapper for public verification API.
+ * Ensures consistent error handling and absolute URLs.
+ */
+export async function apiGet<T>(path: string): Promise<T> {
+  const url = `${API_BASE_URL}${path}`;
+
+  const res = await fetch(url, {
     method: "GET",
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
     },
     cache: "no-store",
   });
 
   if (!res.ok) {
-    throw new Error(`Verification failed with status ${res.status}`);
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
 
-  return res.json();
+  return res.json() as Promise<T>;
 }
+
+export { API_BASE_URL };

@@ -1,18 +1,31 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
 import { PrismaService } from "../prisma/prisma.service";
-import * as bcrypt from "bcryptjs";
-import * as jwt from "jsonwebtoken";
+import { UsersService } from "./users.service";
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly users: UsersService,
+    private readonly jwt: JwtService,
+    private readonly prisma: PrismaService
+  ) {}
 
-  async validateUser(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+  async validateUser(email: string, password: string, tenantCode?: string) {
+    const user = await this.users.findByUsername(email);
+    if (!user || !user.active) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
 
-    if (!user) throw new UnauthorizedException("Invalid credentials");
+    if (tenantCode) {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { code: tenantCode }
+      });
+      if (!tenant || user.tenantId !== tenant.id) {
+        throw new UnauthorizedException("Invalid tenant");
+      }
+    }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException("Invalid credentials");
@@ -20,37 +33,18 @@ export class AuthService {
     return user;
   }
 
-  async login(email: string, password: string) {
-    const user = await this.validateUser(email, password);
+  async login(email: string, password: string, tenantCode?: string) {
+    const user = await this.validateUser(email, password, tenantCode);
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: "8h" }
-    );
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenantId
+    };
 
     return {
-      token,
-      user: {
-        email: user.email,
-        role: user.role,
-      },
+      access_token: this.jwt.sign(payload)
     };
-  }
-
-  async me(userId: string) {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
-    });
   }
 }

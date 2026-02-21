@@ -1,109 +1,65 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Post,
-  NotFoundException,
-  Res,
-  UseGuards,
-} from "@nestjs/common";
-import { Response } from "express";
-import { EvaluationService } from "./evaluation.service";
+import { Body, Controller, Get, Param, Post, Put, Req } from "@nestjs/common";
 import { Roles } from "../auth/roles.decorator";
-import { RolesGuard } from "../auth/roles.guard";
+import { Role } from "../auth/roles.enum";
+import { EvaluationService } from "./evaluation.service";
+import { CreateEvaluationConfigDto } from "./dto/create-evaluation-config.dto";
+import { UpdateEvaluationConfigDto } from "./dto/update-evaluation-config.dto";
 
 @Controller("evaluation")
-@UseGuards(RolesGuard)
 export class EvaluationController {
-  constructor(private readonly evaluationService: EvaluationService) {}
+  constructor(private readonly service: EvaluationService) {}
 
-  @Post("tenders/:tenderId/publish")
-  @Roles("SCM", "ADMIN")
-  async publishEvaluation(@Param("tenderId") tenderId: string) {
-    const result = await this.evaluationService.createEvaluationDocument(
-      tenderId,
-    );
-    if (!result) {
-      throw new NotFoundException("Tender not found or no evaluation results");
-    }
-    return result;
+  // CONFIG
+  @Roles(Role.ADMIN, Role.SCM)
+  @Get("config/:tenderId")
+  getConfig(@Param("tenderId") tenderId: string, @Req() req: any) {
+    return this.service.getConfig(tenderId, req.user.tenantId);
   }
 
-  @Get("tenders/:tenderId/insights")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async getTenderInsights(@Param("tenderId") tenderId: string) {
-    const insights = await this.evaluationService.getTenderInsights(tenderId);
-    if (!insights) throw new NotFoundException("Tender not found");
-    return insights;
+  @Roles(Role.ADMIN, Role.SCM)
+  @Post("config")
+  createConfig(@Body() dto: CreateEvaluationConfigDto, @Req() req: any) {
+    return this.service.createConfig(dto, req.user.tenantId);
   }
 
-  @Get("tenders/:tenderId/heatmap")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async getRiskHeatmap(@Param("tenderId") tenderId: string) {
-    const heatmap = await this.evaluationService.getRiskHeatmap(tenderId);
-    if (!heatmap) throw new NotFoundException("Tender not found");
-    return heatmap;
-  }
-
-  @Get("tenders/:tenderId/timeline")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async getTimeline(@Param("tenderId") tenderId: string) {
-    const timeline = await this.evaluationService.getTenderTimeline(tenderId);
-    if (!timeline) throw new NotFoundException("Tender not found");
-    return timeline;
-  }
-
-  @Get("tenders/:tenderId/council-pack-v2")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async councilPackV2(@Param("tenderId") tenderId: string) {
-    const data = await this.evaluationService.getCouncilPackV2(tenderId);
-    if (!data) throw new NotFoundException("Tender not found");
-    return data;
-  }
-
-  @Get("tenders/:tenderId/council-pack-v2.pdf")
-  @Roles("SCM", "CFO", "ADMIN")
-  async councilPackV2Pdf(
+  @Roles(Role.ADMIN, Role.SCM)
+  @Put("config/:tenderId")
+  updateConfig(
     @Param("tenderId") tenderId: string,
-    @Res() res: Response,
+    @Body() dto: UpdateEvaluationConfigDto,
+    @Req() req: any
   ) {
-    const pdf = await this.evaluationService.generateCouncilPackV2Pdf(
+    return this.service.updateConfig(tenderId, dto, req.user.tenantId);
+  }
+
+  // RUN EVALUATION
+  @Roles(Role.ADMIN, Role.SCM)
+  @Post("run/:tenderId")
+  runEvaluation(@Param("tenderId") tenderId: string, @Req() req: any) {
+    return this.service.runEvaluation(tenderId, req.user.tenantId);
+  }
+
+  // LIST RUNS
+  @Roles(Role.ADMIN, Role.SCM, Role.CFO, Role.AUDIT)
+  @Get("runs/:tenderId")
+  listRuns(@Param("tenderId") tenderId: string, @Req() req: any) {
+    return this.service.listRuns(tenderId, req.user.tenantId);
+  }
+
+  // COMPARE RUNS
+  @Roles(Role.ADMIN, Role.SCM, Role.CFO, Role.AUDIT)
+  @Get("compare/:tenderId/:runA/:runB")
+  compareRuns(
+    @Param("tenderId") tenderId: string,
+    @Param("runA") runA: string,
+    @Param("runB") runB: string,
+    @Req() req: any
+  ) {
+    return this.service.compareRuns(
       tenderId,
+      Number(runA),
+      Number(runB),
+      req.user.tenantId
     );
-    if (!pdf) throw new NotFoundException("Tender not found");
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="council-pack-v2-${tenderId}.pdf"`,
-    );
-    res.send(pdf);
-  }
-
-  @Get("bidders/:bidderId/intelligence")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async getBidderIntelligence(@Param("bidderId") bidderId: string) {
-    const intel =
-      await this.evaluationService.getBidderIntelligence(bidderId);
-    if (!intel) throw new NotFoundException("Bidder not found");
-    return intel;
-  }
-
-  @Get("bidders/:bidderId/risk-profile")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async getBidderRiskProfile(@Param("bidderId") bidderId: string) {
-    const profile =
-      await this.evaluationService.getBidderRiskProfile(bidderId);
-    if (!profile) throw new NotFoundException("Bidder not found");
-    return profile;
-  }
-
-  @Get("tenders/:tenderId/compliance-dashboard")
-  @Roles("SCM", "CFO", "ADMIN", "AUDIT")
-  async getComplianceDashboard(@Param("tenderId") tenderId: string) {
-    const dashboard =
-      await this.evaluationService.getComplianceDashboard(tenderId);
-    if (!dashboard) throw new NotFoundException("Tender not found");
-    return dashboard;
   }
 }

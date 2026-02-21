@@ -1,11 +1,12 @@
-import { Module } from "@nestjs/common";
-import { AnalyticsService } from "./analytics.service";
-import { AnalyticsController } from "./analytics.controller";
-import { PrismaModule } from "../prisma/prisma.module";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { AnalyticsMiddleware } from "./analytics.middleware";
 
 @Module({
-  imports: [PrismaModule],
-  providers: [AnalyticsService],
-  controllers: [AnalyticsController],
+  providers: [PrismaService],
 })
-export class AnalyticsModule {}
+export class AnalyticsModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AnalyticsMiddleware).forRoutes("*");
+  }
+}

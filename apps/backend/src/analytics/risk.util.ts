@@ -1,27 +1,18 @@
-import { EvaluationResult } from "@prisma/client";
+// Keep this file decoupled from Prisma's internal types.
+// We only care about the shape we actually use.
 
-export function buildRiskProfile(result: EvaluationResult) {
-  const base = result.riskScore ?? 0;
+export type EvaluationResultLike = {
+  exceptionsCount: number;
+  slaBreached: boolean;
+  riskScore: number | null;
+};
 
-  const compliancePenalty =
-    result.complianceRate != null ? (1 - result.complianceRate) * 20 : 0;
+export function computeRiskScore(result: EvaluationResultLike): number {
+  let score = 0;
 
-  const exceptionsPenalty = result.exceptionsCount * 2;
+  if (result.exceptionsCount > 0) score += 10;
+  if (result.slaBreached) score += 20;
+  if (result.riskScore) score += result.riskScore;
 
-  const slaPenalty = result.slaBreached ? 15 : 0;
-
-  const finalRisk = Math.min(
-    100,
-    Math.max(0, base + compliancePenalty + exceptionsPenalty + slaPenalty)
-  );
-
-  return {
-    bidderId: result.bidderId,
-    tenderId: result.tenderId,
-    riskScore: finalRisk,
-    complianceRate: result.complianceRate,
-    exceptionsCount: result.exceptionsCount,
-    slaBreached: result.slaBreached,
-    currentStage: result.currentStage,
-  };
+  return score;
 }

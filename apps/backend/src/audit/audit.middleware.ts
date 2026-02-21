@@ -1,29 +1,34 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
-import { AuditService } from "./audit.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class AuditMiddleware implements NestMiddleware {
-  constructor(private auditService: AuditService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  use(req: Request & { user?: any }, res: Response, next: NextFunction) {
-    res.on("finish", () => {
-      const user = req.user;
-      const endpoint = req.originalUrl || req.url;
-      const ip =
-        (req.headers["x-forwarded-for"] as string) ||
-        req.socket.remoteAddress ||
-        null;
-      const userAgent = (req.headers["user-agent"] as string) || null;
+  async use(req: Request, _res: Response, next: NextFunction) {
+    const user = (req as any).user;
 
-      this.auditService.logAccess({
-        userId: user?.id ?? null,
-        role: user?.role ?? null,
-        endpoint,
-        ip,
-        userAgent,
-      });
-    });
+    if (user) {
+      try {
+        await this.prisma.auditLog.create({
+          data: {
+            tenantId: user.tenantId ?? null,
+            userId: user.userId ?? null,
+            action: "API_ACCESS",
+            entity: "REQUEST",
+            entityId: req.path,
+            metadata: {
+              method: req.method,
+              ip: req.ip,
+              userAgent: req.headers["user-agent"] ?? null,
+            },
+          },
+        });
+      } catch (e) {
+        console.error("Audit log failed:", e);
+      }
+    }
 
     next();
   }

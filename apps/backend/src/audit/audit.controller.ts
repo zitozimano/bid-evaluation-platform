@@ -1,30 +1,21 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { AuditLogService } from './audit-log/audit-log.service';
-import { Roles } from '../auth/roles.decorator';
-import { Role } from '../auth/roles.enum';
+import { Controller, Get, Param } from "@nestjs/common";
+import { Roles } from "../auth/roles.decorator";
+import { Role } from "../auth/roles.enum";
+import { AuditService } from "./audit.service";
 
-@Controller('audit')
+@Controller("audit")
 export class AuditController {
-  constructor(private auditLogService: AuditLogService) {}
+  constructor(private readonly service: AuditService) {}
 
-  /**
-   * View audit logs.
-   * Restricted to governance roles.
-   */
-  @Get('logs')
-  @Roles(Role.AUDIT, Role.CFO, Role.SCM, Role.AGSA, Role.ADMIN)
-  getLogs(@Query('limit') limit?: string) {
-    const parsedLimit = limit ? parseInt(limit, 10) : 100;
-    return this.auditLogService.listLogs(parsedLimit);
+  @Roles(Role.ADMIN, Role.AUDIT)
+  @Get()
+  findAll() {
+    return this.service.findAll();
   }
 
-  /**
-   * Run anomaly detection.
-   * Restricted to governance roles.
-   */
-  @Get('anomalies')
-  @Roles(Role.AUDIT, Role.CFO, Role.SCM, Role.AGSA, Role.ADMIN)
-  getAnomalies() {
-    return this.auditLogService.detectAnomalies();
+  @Roles(Role.ADMIN, Role.AUDIT)
+  @Get(":entity/:id")
+  findByEntity(@Param("entity") entity: string, @Param("id") id: string) {
+    return this.service.findByEntity(entity, id);
   }
 }

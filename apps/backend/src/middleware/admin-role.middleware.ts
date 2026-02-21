@@ -1,20 +1,18 @@
 import { Injectable, NestMiddleware, ForbiddenException } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 
-const ALLOWED = ["AUDIT", "INTERNAL-AUDIT", "ADMIN"];
+const ALLOWED = ["ADMIN", "SCM", "CFO", "AUDIT"];
 
 @Injectable()
 export class AdminRoleMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
-    const user = req.user;
+    const user: any = (req as any).user;
 
-    if (!user) {
-      throw new ForbiddenException("Not authenticated");
-    }
+    const role = user?.role || user?.roles?.[0] || null;
 
-    if (!ALLOWED.includes(user.role)) {
+    if (!role || !ALLOWED.includes(role)) {
       throw new ForbiddenException(
-        `Role ${user.role} is not permitted to access admin routes`,
+        `Role ${role ?? "UNKNOWN"} is not permitted to access admin routes`,
       );
     }
 

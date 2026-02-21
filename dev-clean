@@ -1,0 +1,26 @@
+#!/bin/bash
+
+echo "🔧 Cleaning development environment..."
+
+echo "🛑 Killing all Node processes..."
+killall node 2>/dev/null
+
+echo "🧹 Freeing ports 3000, 3001, 4000..."
+lsof -t -i:3000 | xargs -r kill -9
+lsof -t -i:3001 | xargs -r kill -9
+lsof -t -i:4000 | xargs -r kill -9
+
+echo "🗑 Removing caches..."
+rm -rf apps/frontend-internal/.next
+rm -rf apps/frontend-public/.next
+rm -rf apps/backend/dist
+
+echo "🧼 Clearing pnpm store garbage..."
+pnpm store prune
+
+# OPTIONAL: Uncomment if you want full reinstall
+# echo "🗑 Removing node_modules..."
+# rm -rf node_modules
+# pnpm install
+
+echo "✨ Dev environment cleaned."

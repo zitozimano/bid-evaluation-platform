@@ -1,35 +1,24 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Param,
-  Body,
-  UseGuards,
-} from "@nestjs/common";
-import { NotificationRulesService } from "./notification-rules.service";
+import { Body, Controller, Get, Param, Put } from "@nestjs/common";
 import { Roles } from "../auth/roles.decorator";
-import { RolesGuard } from "../auth/roles.guard";
+import { Role } from "../auth/roles.enum";
+import { NotificationRulesService } from "./notification-rules.service";
 
 @Controller("notification-rules")
-@UseGuards(RolesGuard)
 export class NotificationRulesController {
-  constructor(
-    private readonly rulesService: NotificationRulesService,
-  ) {}
+  constructor(private readonly service: NotificationRulesService) {}
 
+  @Roles(Role.ADMIN)
   @Get()
-  @Roles("ADMIN")
-  async list() {
-    return this.rulesService.list();
+  list() {
+    return this.service.list();
   }
 
+  @Roles(Role.ADMIN)
   @Put(":id")
-  @Roles("ADMIN")
-  async update(
+  update(
     @Param("id") id: string,
-    @Body()
-    body: { trigger: string; role: string; enabled: boolean },
+    @Body() body: { trigger: string; role: string; enabled: boolean }
   ) {
-    return this.rulesService.update(id, body);
+    return this.service.update(id, body);
   }
 }

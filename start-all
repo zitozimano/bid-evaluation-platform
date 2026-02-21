@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "🚀 Starting all apps..."
+
+echo "▶️ Starting backend..."
+(cd apps/backend && pnpm run start:dev) &
+
+echo "▶️ Starting frontend-internal..."
+(cd apps/frontend-internal && pnpm run dev) &
+
+echo "▶️ Starting frontend-public..."
+(cd apps/frontend-public && pnpm run dev) &
+
+echo "✨ All apps started."

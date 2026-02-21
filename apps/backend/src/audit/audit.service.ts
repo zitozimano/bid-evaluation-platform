@@ -3,25 +3,45 @@ import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class AuditService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async logAccess(params: {
-    userId: string | null;
-    role: string | null;
-    endpoint: string;
-    ip?: string | null;
-    userAgent?: string | null;
+  async log(input: {
+    user: string;
+    entity: string;
+    entityId: string;
+    action: string;
+    oldState?: string;
+    newState?: string;
+    payload?: any;
   }) {
-    if (!params.userId || !params.role) return;
-
-    await this.prisma.analyticsAccessLog.create({
+    await this.prisma.auditLog.create({
       data: {
-        userId: params.userId,
-        role: params.role,
-        endpoint: params.endpoint,
-        ip: params.ip ?? null,
-        userAgent: params.userAgent ?? null,
-      },
+        userId: input.user,
+        entity: input.entity,
+        entityId: input.entityId,
+        action: input.action,
+        metadata: input.payload ?? null
+      }
+    });
+  }
+
+  async findAll() {
+    return this.prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" }
+    });
+  }
+
+  async findByEntity(entity: string, entityId: string) {
+    return this.prisma.auditLog.findMany({
+      where: { entity, entityId },
+      orderBy: { createdAt: "desc" }
+    });
+  }
+
+  async getLogsForEntity(entity: string, entityId: string) {
+    return this.prisma.auditLog.findMany({
+      where: { entity, entityId },
+      orderBy: { createdAt: "asc" }
     });
   }
 }

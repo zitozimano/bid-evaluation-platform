@@ -1,9 +1,46 @@
 {
   "compilerOptions": {
+    /* Core TS behavior */
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+
+    /* Monorepo path aliases */
     "baseUrl": ".",
     "paths": {
-      "@shared/ui": ["shared/ui/src"],
-      "@shared/ui/*": ["shared/ui/src/*"]
+      "@/*": ["./*"],
+
+      /* Shared workspace packages */
+      "@shared/*": ["shared/*"],
+      "@packages/*": ["packages/*"],
+
+      /* Frontend aliases */
+      "@public/*": ["apps/frontend-public/src/*"],
+      "@internal/*": ["apps/frontend-internal/src/*"],
+
+      /* Backend aliases */
+      "@backend/*": ["apps/backend/src/*"]
     }
-  }
+  },
+
+  "include": [
+    "apps/**/*",
+    "packages/**/*",
+    "shared/**/*"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "**/dist",
+    "**/.next"
+  ]
 }

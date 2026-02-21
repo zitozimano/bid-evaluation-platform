@@ -1,41 +1,28 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: string;
-}
+// Keep this loose: we only need tenantId and id/role for now.
+export type UserLike = {
+  id?: string;
+  tenantId?: string;
+  role?: string;
+  [key: string]: any;
+};
 
-declare module "express-serve-static-core" {
-  interface Request {
-    user?: AuthUser;
-  }
-}
+export function authMiddleware(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
+  const userHeader = req.headers["x-user"];
 
-@Injectable()
-export class AuthMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
-    const authHeader = req.headers["authorization"];
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return next();
-    }
-
-    const token = authHeader.substring(7);
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new UnauthorizedException("JWT secret not configured");
-    }
-
+  if (userHeader) {
     try {
-      const payload = jwt.verify(token, secret) as AuthUser;
-      req.user = payload;
-      next();
+      const parsed: UserLike = JSON.parse(userHeader as string);
+      (req as any).user = parsed;
     } catch {
-      throw new UnauthorizedException("Invalid or expired token");
+      // ignore malformed header
     }
   }
+
+  next();
 }

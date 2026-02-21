@@ -1,0 +1,684 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   TENANT + BRANDING
+// ─────────────────────────────────────────────────────────────
+//
+
+model Tenant {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branding  TenantBranding?
+  tenders   Tender[]
+  users     User[]
+  circulars Circular[]
+}
+
+model TenantBranding {
+  id             String   @id @default(uuid())
+  tenantId       String   @unique
+  primaryColor   String?
+  secondaryColor String?
+  logoUrl        String?
+  publicName     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   DEPARTMENTS + CATEGORIES
+// ─────────────────────────────────────────────────────────────
+//
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  tenders   Tender[]
+  assets    Asset[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  tenders   Tender[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   USER + NOTIFICATIONS + ANALYTICS
+// ─────────────────────────────────────────────────────────────
+//
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String
+  password  String
+  tenantId  String?
+  active    Boolean  @default(true)
+
+  inviteToken  String?  @unique
+  resetToken   String?  @unique
+  tokenExpires DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant?               @relation(fields: [tenantId], references: [id])
+  analyticsLogs     AnalyticsAccessLog[]
+  scmAssignments    ScmTenderAssignment[]
+  notifications     Notification[]
+  notificationRules NotificationRule[] @relation("RuleOwner")
+
+  @@index([tenantId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model NotificationRule {
+  id      String  @id @default(uuid())
+  trigger String
+  role    String
+  enabled Boolean @default(true)
+  ownerId String?
+  owner   User?   @relation("RuleOwner", fields: [ownerId], references: [id])
+
+  @@unique([trigger, role])
+  @@index([trigger])
+  @@index([role])
+}
+
+model AnalyticsAccessLog {
+  id        String   @id @default(uuid())
+  userId    String
+  role      String
+  endpoint  String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([endpoint])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   TENDER + SCM ASSIGNMENTS
+// ─────────────────────────────────────────────────────────────
+//
+
+model Tender {
+  id          String      @id @default(uuid())
+  number      String
+  name        String
+  description String?
+  stage       TenderStage @default(DRAFT)
+
+  departmentId String?
+  categoryId   String?
+  tenantId     String?
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  category   Category?   @relation(fields: [categoryId], references: [id])
+  tenant     Tenant?     @relation(fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bidders             Bidder[]
+  evaluationConfig    EvaluationConfig?
+  documents           EvaluationDocument[]
+  evaluationResults   EvaluationResult[]
+  signatures          EvaluationSignature[]
+  scmAssignments      ScmTenderAssignment[]
+  timelineEvents      TenderTimelineEvent[]
+  insights            TenderInsights?
+  heatmap             TenderHeatmap?
+  complianceDashboard TenderComplianceDashboard?
+  councilPacks        CouncilPack[]
+
+  reportVerifications ReportVerification[]
+
+  assets Asset[]
+
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([categoryId])
+}
+
+model ScmTenderAssignment {
+  id        String   @id @default(uuid())
+  userId    String
+  tenderId  String
+  role      String
+  createdAt DateTime @default(now())
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tenderId])
+  @@index([tenderId])
+}
+
+enum TenderStage {
+  DRAFT
+  EVALUATION
+  AWARDED
+  CANCELLED
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   BIDDERS + BBBEE + EVIDENCE + RISK + INTELLIGENCE
+// ─────────────────────────────────────────────────────────────
+//
+
+model Bidder {
+  id                     String   @id @default(uuid())
+  tenderId               String
+  name                   String
+  price                  Float?
+  disqualified           Boolean  @default(false)
+  disqualificationReason String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  tender            Tender                 @relation(fields: [tenderId], references: [id])
+  bbbee             Bbbee?
+  technicalScores   BidderCriterionScore[]
+  evaluationResults EvaluationResult[]
+  evidence          Evidence[]
+
+  intelligence BidderIntelligence?
+  riskProfile  BidderRiskProfile?
+
+  @@index([tenderId])
+}
+
+model Bbbee {
+  id        String    @id @default(uuid())
+  bidderId  String    @unique
+  level     Int?
+  expiry    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  bidder Bidder @relation(fields: [bidderId], references: [id])
+}
+
+model Evidence {
+  id        String   @id @default(uuid())
+  bidderId  String
+  type      String
+  metadata  Json?
+  url       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bidder Bidder @relation(fields: [bidderId], references: [id])
+
+  @@index([bidderId])
+}
+
+model BidderCriterionScore {
+  id            String   @id @default(uuid())
+  bidderId      String
+  criterionCode String
+  rawScore      Float
+  scaleMax      Float
+  weight        Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bidder Bidder @relation(fields: [bidderId], references: [id])
+
+  @@index([bidderId])
+}
+
+model BidderIntelligence {
+  bidderId String @id
+  bidder   Bidder @relation(fields: [bidderId], references: [id])
+  timeline Json
+}
+
+model BidderRiskProfile {
+  bidderId String @id
+  bidder   Bidder @relation(fields: [bidderId], references: [id])
+  profile  Json
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   EVALUATION ENGINE
+// ─────────────────────────────────────────────────────────────
+//
+
+model EvaluationConfig {
+  id                String   @id @default(uuid())
+  tenderId          String   @unique
+  priceWeight       Int
+  bbbeeWeight       Int
+  functionalityPass Int
+  functionalityMax  Int
+  criteria          Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+}
+
+model EvaluationRun {
+  id        String   @id @default(uuid())
+  tenderId  String
+  runNumber Int
+  runHash   String?
+  createdAt DateTime @default(now())
+
+  results EvaluationResult[]
+
+  @@unique([tenderId, runNumber])
+  @@index([tenderId])
+}
+
+model EvaluationResult {
+  id       String @id @default(uuid())
+  tenderId String
+  bidderId String
+
+  runId String?
+  run   EvaluationRun? @relation(fields: [runId], references: [id])
+
+  functionalityScore Float
+  qualifies          Boolean
+
+  price      Float
+  priceScore Float
+
+  bbbeeLevel  Int?
+  bbbeePoints Float
+
+  totalScore Float
+
+  riskScore      Float?
+  complianceRate Float?
+
+  exceptionsCount Int     @default(0)
+  slaBreached     Boolean @default(false)
+
+  currentStage String?
+  createdAt    DateTime @default(now())
+  hash         String   @unique
+
+  bidder Bidder @relation(fields: [bidderId], references: [id])
+  tender Tender @relation(fields: [tenderId], references: [id])
+
+  compliance   ComplianceItem[]
+  exceptions   EvaluationException[]
+  workflowLogs WorkflowLog[]
+
+  @@index([tenderId])
+  @@index([bidderId])
+}
+
+model WorkflowLog {
+  id                 String   @id @default(uuid())
+  evaluationResultId String
+  stage              String
+  daysSpent          Float
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  evaluationResult EvaluationResult @relation(fields: [evaluationResultId], references: [id])
+
+  @@index([evaluationResultId])
+  @@index([stage])
+}
+
+model EvaluationException {
+  id                 String    @id @default(uuid())
+  evaluationResultId String
+  type               String
+  reason             String
+  approved           Boolean?
+  approvedBy         String?
+  approvedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  evaluationResult EvaluationResult @relation(fields: [evaluationResultId], references: [id])
+
+  @@index([evaluationResultId])
+}
+
+model EvaluationSignature {
+  id        String   @id @default(uuid())
+  tenderId  String
+  role      String
+  name      String
+  signature String?
+  comment   String?
+  signedAt  DateTime @default(now())
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+
+  @@unique([tenderId, role])
+  @@index([tenderId])
+}
+
+model EvaluationDocument {
+  id        String   @id @default(uuid())
+  tenderId  String
+  runNumber Int
+  fileUrl   String
+  hash      String
+  createdAt DateTime @default(now())
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+
+  @@unique([tenderId, runNumber])
+  @@index([tenderId])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   COMPLIANCE ENGINE
+// ─────────────────────────────────────────────────────────────
+//
+
+model Circular {
+  id        String   @id @default(uuid())
+  label     String
+  tenantId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  rules  ComplianceRule[]
+
+  @@index([tenantId])
+}
+
+model ComplianceRule {
+  id          String   @id @default(uuid())
+  circularId  String
+  code        String
+  label       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  circular Circular         @relation(fields: [circularId], references: [id])
+  items    ComplianceItem[]
+
+  @@index([circularId])
+}
+
+model ComplianceItem {
+  id                 String   @id @default(uuid())
+  evaluationResultId String
+  ruleId             String
+  compliant          Boolean
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  evaluationResult EvaluationResult @relation(fields: [evaluationResultId], references: [id])
+  rule             ComplianceRule   @relation(fields: [ruleId], references: [id])
+
+  @@index([evaluationResultId])
+  @@index([ruleId])
+}
+
+model TenderComplianceDashboard {
+  tenderId String @id
+  tender   Tender @relation(fields: [tenderId], references: [id])
+  payload  Json
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   INSIGHTS + HEATMAP
+// ─────────────────────────────────────────────────────────────
+//
+
+model TenderInsights {
+  tenderId String @id
+  tender   Tender @relation(fields: [tenderId], references: [id])
+  payload  Json
+}
+
+model TenderHeatmap {
+  tenderId String @id
+  tender   Tender @relation(fields: [tenderId], references: [id])
+  cells    Json
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   TIMELINE EVENTS
+// ─────────────────────────────────────────────────────────────
+//
+
+model TenderTimelineEvent {
+  id        String   @id @default(uuid())
+  tenderId  String
+  type      String
+  label     String
+  createdAt DateTime @default(now())
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+
+  @@index([tenderId])
+  @@index([type])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   COUNCIL PACK
+// ─────────────────────────────────────────────────────────────
+//
+
+model CouncilPack {
+  id        String   @id @default(uuid())
+  tenderId  String
+  url       String
+  createdAt DateTime @default(now())
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   AUDIT LOGGING
+// ─────────────────────────────────────────────────────────────
+//
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   REPORT AUDIT LOGGING
+// ─────────────────────────────────────────────────────────────
+//
+
+model ReportAudit {
+  id        String   @id @default(uuid())
+  userId    String
+  tenderId  String
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([tenderId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   REPORT SIGNATURES
+// ─────────────────────────────────────────────────────────────
+//
+
+model ReportSignature {
+  id        String   @id @default(uuid())
+  hash      String   @unique
+  tenderId  String
+  type      String
+  userId    String
+  signature String?
+  algorithm String?
+  createdAt DateTime @default(now())
+
+  @@index([tenderId])
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   REPORT VERIFICATION
+// ─────────────────────────────────────────────────────────────
+//
+
+model ReportVerification {
+  id        String   @id @default(uuid())
+  hash      String   @unique
+  tenderId  String
+  type      String
+  createdAt DateTime @default(now())
+
+  tender Tender @relation(fields: [tenderId], references: [id])
+
+  @@index([hash])
+  @@index([tenderId])
+  @@index([type])
+}
+
+//
+// ─────────────────────────────────────────────────────────────
+//   ASSET LIFECYCLE ENGINE
+// ─────────────────────────────────────────────────────────────
+//
+
+model Asset {
+  id              String   @id @default(uuid())
+  tenderId        String?
+  name            String
+  description     String?
+  assetNumber     String?  @unique
+  category        String?
+  location        String?
+  departmentId    String?
+  cost            Float
+  acquisitionDate DateTime
+  usefulLifeYears Int
+  residualValue   Float @default(0)
+  status          AssetStatus @default(IN_USE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tender     Tender?     @relation(fields: [tenderId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  lifecycleEvents AssetLifecycleEvent[]
+  fundings        AssetFunding[]
+}
+
+enum AssetStatus {
+  PLANNED
+  IN_USE
+  UNDER_MAINTENANCE
+  IMPAIRED
+  REPLACED
+  DISPOSED
+}
+
+model AssetLifecycleEvent {
+  id        String   @id @default(uuid())
+  assetId   String
+  type      AssetLifecycleEventType
+  note      String?
+  createdAt DateTime @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  @@index([assetId])
+  @@index([type])
+}
+
+enum AssetLifecycleEventType {
+  CREATED
+  COMMISSIONED
+  MAINTENANCE
+  IMPAIRED
+  REPLACED
+  DISPOSED
+}
+
+model FundingSource {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assetFundings AssetFunding[]
+}
+
+model AssetFunding {
+  id              String   @id @default(uuid())
+  assetId         String
+  fundingSourceId String
+  amount          Float
+  createdAt       DateTime @default(now())
+
+  asset         Asset         @relation(fields: [assetId], references: [id])
+  fundingSource FundingSource @relation(fields: [fundingSourceId], references: [id])
+
+  @@index([assetId])
+  @@index([fundingSourceId])
+}

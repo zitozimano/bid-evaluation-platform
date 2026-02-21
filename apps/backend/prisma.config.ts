@@ -1,11 +1,6 @@
-import { defineConfig } from "prisma";
+import { defineConfig } from '@prisma/cli';
 
 export default defineConfig({
-  schema: "./prisma/schema.prisma",
-  datasource: {
-    db: {
-      provider: "postgresql",
-      url: process.env.DATABASE_URL!,
-    },
-  },
+  schema: './prisma/schema.prisma',
+  envFile: '../../.env',   // ⭐ Point Prisma to the monorepo root
 });

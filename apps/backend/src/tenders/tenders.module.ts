@@ -1,19 +1,20 @@
 import { Module } from "@nestjs/common";
-import { TendersController } from "./tenders.controller";
 import { TendersService } from "./tenders.service";
+import { TendersController } from "./tenders.controller";
 import { PrismaService } from "../prisma/prisma.service";
-import { WorkflowService } from "../workflow/workflow.service";
-import { EvaluationService } from "../evaluation/evaluation.service";
-import { HtmlPdfService } from "../common/pdf/html-pdf.service";
+import { WorkflowModule } from "../workflow/workflow.module";   // ⭐ REQUIRED
+import { AuditModule } from "../audit/audit.module";             // ⭐ REQUIRED because TendersService injects AuditService
 
 @Module({
-  controllers: [TendersController],
+  imports: [
+    WorkflowModule,   // ⭐ Provides WorkflowService
+    AuditModule       // ⭐ Provides AuditService
+  ],
   providers: [
     TendersService,
-    PrismaService,
-    WorkflowService,
-    EvaluationService,
-    HtmlPdfService,
+    PrismaService
   ],
+  controllers: [TendersController],
+  exports: [TendersService]
 })
 export class TendersModule {}

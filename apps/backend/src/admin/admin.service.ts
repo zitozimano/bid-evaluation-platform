@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -7,30 +7,44 @@ export class AdminService {
 
   async listUsers() {
     return this.prisma.user.findMany({
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
     });
   }
 
-  async updateUserRoles(userId: string, roles: string[]) {
-    return this.prisma.user.update({
+  async updateUserRole(userId: string, role: string) {
+    const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { roles },
+      data: { role },
     });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
   }
 
   async listNotificationRules() {
     return this.prisma.notificationRule.findMany({
-      orderBy: { trigger: "asc" },
+      orderBy: { id: "desc" },
     });
   }
 
   async updateNotificationRule(
     id: string,
-    data: { trigger: string; role: string; enabled: boolean },
+    body: Partial<{
+      enabled: boolean;
+      role: string;
+      trigger: string;
+    }>,
   ) {
     return this.prisma.notificationRule.update({
       where: { id },
-      data,
+      data: {
+        enabled: body.enabled ?? undefined,
+        role: body.role ?? undefined,
+        trigger: body.trigger ?? undefined,
+      },
     });
   }
 }

@@ -1,0 +1,44 @@
+name: PDF QA
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/pdf-qa.yml"
+  push:
+    branches:
+      - main
+
+jobs:
+  pdf-smoke-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install deps
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run PDF smoke test
+        run: pnpm pdf:smoke
+
+      - name: Upload generated PDFs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-smoke-artifacts
+          path: |
+            backend/ci-*-smoke.pdf
