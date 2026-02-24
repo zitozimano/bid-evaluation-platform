@@ -1,48 +1,26 @@
-import * as dotenv from "dotenv";
-dotenv.config(); // ⭐ Load .env before anything else
-
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { HttpExceptionFilter } from "./common/exceptions/http-exception.filter";
-import { ValidationPipe } from "@nestjs/common";
-import { LoggingInterceptor } from "./logging/logging.interceptor";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    cors: true,
-  });
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule);
 
-  // Global Exception Filter
-  app.useGlobalFilters(new HttpExceptionFilter());
+  const port = Number(process.env.PORT) || 3000;
 
-  // Global Validation Pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
+  app.enableShutdownHooks();
 
-  // Global Logging Interceptor
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  const server = await app.listen(port);
+  logger.log(`Backend running on port ${port}`);
 
-  // Swagger / OpenAPI Setup
-  const config = new DocumentBuilder()
-    .setTitle("Project Accounting Platform API")
-    .setDescription(
-      "Governance-grade API for tenders, evaluation, compliance, insights, notifications, and public transparency.",
-    )
-    .setVersion("1.0.0")
-    .addBearerAuth()
-    .build();
+  const shutdown = async (signal: string) => {
+    logger.warn(`Received ${signal}, shutting down...`);
+    await app.close();
+    process.exit(0);
+  };
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, document);
-
-  await app.listen(3000);
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 bootstrap();
